@@ -1,0 +1,39 @@
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></svg>
+    </div>
+    <div>
+      <h1>Cartographie des tirages au sort</h1>
+      <p>Régions · Villes · Drives</p>
+    </div>
+  </div>
+
+  <nav class="stepper" aria-label="Étapes">
+    @for (step of steps(); track step.id) {
+      <button
+        type="button"
+        class="step"
+        [class.is-current]="currentStep() === step.id"
+        [class.is-done]="currentStep() > step.id"
+        [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+        (click)="stepChange.emit(step.id)">
+        <span class="step-num">
+          @if (currentStep() > step.id) { ✓ } @else { {{ step.id }} }
+        </span>
+        <span class="step-text">
+          <span class="step-title">{{ step.title }}</span>
+          <span class="step-sub">{{ step.subtitle }}</span>
+        </span>
+      </button>
+      @if (!$last) { <span class="step-line" [class.is-done]="currentStep() > step.id"></span> }
+    }
+  </nav>
+
+  <div class="nav-btns">
+    <button type="button" class="btn btn--ghost" (click)="previous.emit()" [disabled]="currentStep() === 1" aria-label="Étape précédente">←</button>
+    <button type="button" class="btn btn--primary" (click)="next.emit()" [disabled]="currentStep() === 4">
+      Étape suivante <span aria-hidden="true">→</span>
+    </button>
+  </div>
+</header>

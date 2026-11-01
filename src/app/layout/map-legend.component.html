@@ -1,0 +1,47 @@
+<div class="legend">
+  <div class="legend-title">Légende</div>
+  @switch (step()) {
+    @case (1) {
+      <div class="legend-row"><span class="sw sw--grad"></span>Région tirée (n° d’ordre)</div>
+      <div class="legend-row"><span class="sw" style="background:#cbd5e1"></span>Région non tirée</div>
+      <div class="legend-row"><span class="sw sw--dashed"></span>Hors périmètre (Corse)</div>
+    }
+    @case (2) {
+      <div class="legend-row"><span class="ld ld--drawn"></span>Ville tirée (rang)</div>
+      <div class="legend-row"><span class="ld ld--extra"></span>Tirage supplémentaire</div>
+      <div class="legend-row"><span class="ld ld--off"></span>Ville non retenue</div>
+      <div class="legend-sep"></div>
+      <div class="legend-row legend-sizes">
+        <span class="ld ld--off" style="width:16px;height:16px"></span>
+        <span class="ld ld--off" style="width:12px;height:12px"></span>
+        <span class="ld ld--off" style="width:8px;height:8px"></span>
+        <small>Préf. région · Préf. · Sous-préf.</small>
+      </div>
+      <div class="legend-sep"></div>
+      @for (region of drawnRegions(); track region.name) {
+        <div class="legend-row"><span class="sw" [style.background]="regionColors[region.name]"></span>{{ region.name }}</div>
+      }
+    }
+    @default {
+      @for (brand of brands; track brand.name) {
+        <button
+          type="button"
+          class="legend-row legend-toggle"
+          [class.is-off]="!visibleBrands().has(brand.name)"
+          (click)="toggleBrand.emit(brand.name)"
+          [attr.aria-pressed]="visibleBrands().has(brand.name)">
+          <span class="mini-pin" [style.--c]="brand.color"><i>{{ brand.letter }}</i></span>{{ brand.name }}
+        </button>
+      }
+      @if (visibleBrands().size < brands.length) {
+        <button type="button" class="link-btn" (click)="showAllBrands.emit()">Tout afficher</button>
+      }
+      <div class="legend-sep"></div>
+      @if (step() === 3) {
+        <div class="legend-row"><span class="star star--lg">★</span>Magasin tiré au sort</div>
+      }
+      <div class="legend-row"><span class="halo"></span>Ville tirée</div>
+      <small class="legend-hint">Cliquez sur une enseigne pour la masquer</small>
+    }
+  }
+</div>

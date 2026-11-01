@@ -1,0 +1,55 @@
+<div class="shell">
+  <app-header
+    [currentStep]="step()"
+    [steps]="steps"
+    (stepChange)="goTo($event)"
+    (previous)="prev()"
+    (next)="next()" />
+
+  <main class="content">
+    <aside class="sidebar">
+      @if (error()) {
+        <div class="alert">{{ error() }}</div>
+      } @else if (!stats()) {
+        <div class="loading"><span class="spinner"></span> Chargement des données…</div>
+      } @else {
+        <app-step-content
+          [step]="step()"
+          [stats]="stats()!"
+          [drawnRegions]="drawnRegions()"
+          [otherRegions]="otherRegions()"
+          [citiesByRegion]="citiesByRegion()"
+          [storesByRegion]="storesByRegion()"
+          [hoveredId]="hoveredId()"
+          [expandedRegions]="expandedRegions()"
+          [visibleBrands]="visibleBrands()"
+          (hoverChange)="hover($event)"
+          (focusRegion)="focusRegion($event)"
+          (focusItem)="focus($event)"
+          (toggleExpanded)="toggleExpanded($event)" />
+        <footer class="credits">
+          Sources : feuilles Excel partagées · Géolocalisation : Base Adresse Nationale &amp; OpenStreetMap.
+          <br />Astuce : utilisez les flèches ← → du clavier pour naviguer.
+        </footer>
+      }
+    </aside>
+
+    <section class="map-area">
+      @if (data() && geo() && outline()) {
+        <app-france-map
+          [step]="step()"
+          [data]="data()!"
+          [geo]="geo()!"
+          [outline]="outline()!"
+          [brands]="visibleBrands()"
+          (hovered)="onMapHover($event)" />
+        <app-map-legend
+          [step]="step()"
+          [visibleBrands]="visibleBrands()"
+          [drawnRegions]="drawnRegions()"
+          (toggleBrand)="toggleBrand($event)"
+          (showAllBrands)="showAllBrands()" />
+      }
+    </section>
+  </main>
+</div>

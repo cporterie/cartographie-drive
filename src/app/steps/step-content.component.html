@@ -1,0 +1,185 @@
+@let summary = stats();
+@switch (step()) {
+  @case (1) {
+    <section class="panel">
+      <span class="eyebrow">Étape 1</span>
+      <h2>Tirage des régions</h2>
+      <p class="lead">
+        {{ summary.drawnRegions }} régions ont été tirées au sort parmi les {{ summary.regions }} régions
+        de France métropolitaine continentale.
+      </p>
+      <div class="kpis">
+        <div class="kpi"><b>{{ summary.regions }}</b><span>régions éligibles</span></div>
+        <div class="kpi kpi--accent"><b>{{ summary.drawnRegions }}</b><span>régions tirées</span></div>
+      </div>
+
+      <h3>Ordre du tirage</h3>
+      <ol class="rank-list">
+        @for (region of drawnRegions(); track region.name) {
+          <li
+            class="rank-item"
+            [class.is-hover]="hoveredId() === 'region:' + region.name"
+            [style.--c]="regionColors[region.name]"
+            (mouseenter)="hoverChange.emit('region:' + region.name)"
+            (mouseleave)="hoverChange.emit(null)"
+            (click)="focusRegion.emit(region.name)">
+            <span class="rank">{{ region.drawOrder }}</span>
+            <span class="rank-name">{{ region.name }}</span>
+            <span class="chev">›</span>
+          </li>
+        }
+      </ol>
+
+      <h3>Régions non tirées</h3>
+      <div class="chips">
+        @for (region of otherRegions(); track region.name) {
+          <span
+            class="chip chip--muted"
+            [class.is-hover]="hoveredId() === 'region:' + region.name"
+            (mouseenter)="hoverChange.emit('region:' + region.name)"
+            (mouseleave)="hoverChange.emit(null)">{{ region.name }}</span>
+        }
+      </div>
+    </section>
+  }
+
+  @case (2) {
+    <section class="panel">
+      <span class="eyebrow">Étape 2</span>
+      <h2>Tirage des villes</h2>
+      <p class="lead">
+        Dans chaque région tirée, les préfectures et sous-préfectures ont été classées par tirage au sort.
+        Les <b>5 premières</b> sont retenues ; un <b>tirage supplémentaire</b> complète les enseignes absentes.
+      </p>
+      <div class="kpis kpis--3">
+        <div class="kpi"><b>{{ summary.cities }}</b><span>villes éligibles</span></div>
+        <div class="kpi kpi--accent"><b>{{ summary.drawnCities }}</b><span>villes tirées</span></div>
+        <div class="kpi kpi--outline"><b>+{{ summary.extraCities }}</b><span>supplémentaires</span></div>
+      </div>
+
+      @for (group of citiesByRegion(); track group.region) {
+        <article class="card" [style.--c]="group.color">
+          <header class="card-head" (click)="focusRegion.emit(group.region)">
+            <span class="dot"></span>
+            <h4>{{ group.region }}</h4>
+            <span class="muted">{{ group.all.length }} villes</span>
+          </header>
+          <ul class="city-list">
+            @for (city of expandedRegions().has(group.region) ? group.all : group.selected; track city.id) {
+              <li
+                class="city"
+                [class.city--extra]="city.selection === 'supplementaire'"
+                [class.city--off]="!city.selection"
+                [class.is-hover]="hoveredId() === city.id"
+                (mouseenter)="hoverChange.emit(city.id)"
+                (mouseleave)="hoverChange.emit(null)"
+                (click)="focusItem.emit(city)">
+                <span class="rank rank--sm">{{ city.drawOrder }}</span>
+                <span class="city-name">{{ city.name }}</span>
+                @if (city.selection === 'supplementaire') {
+                  <span class="pill pill--outline">Supplémentaire</span>
+                } @else {
+                  <span class="pill">{{ statusLabels[city.status] }}</span>
+                }
+              </li>
+            }
+          </ul>
+          <button type="button" class="link-btn" (click)="toggleExpanded.emit(group.region)">
+            {{ expandedRegions().has(group.region) ? 'Masquer l’ordre complet' : 'Voir l’ordre complet du tirage' }}
+          </button>
+        </article>
+      }
+    </section>
+  }
+
+  @case (3) {
+    <section class="panel">
+      <span class="eyebrow">Étape 3</span>
+      <h2>Magasins éligibles &amp; tirage</h2>
+      <p class="lead">
+        Pour chaque région et chaque enseigne, les drives des villes tirées ont été recensés,
+        puis un magasin a été tiré au sort <span class="star">★</span>.
+      </p>
+      <div class="kpis">
+        <div class="kpi"><b>{{ summary.stores }}</b><span>magasins éligibles</span></div>
+        <div class="kpi kpi--gold"><b>{{ summary.drawnStores }}</b><span>magasins tirés</span></div>
+      </div>
+
+      @for (region of storesByRegion(); track region.region) {
+        <article class="card" [style.--c]="region.color">
+          <header class="card-head" (click)="focusRegion.emit(region.region)">
+            <span class="dot"></span>
+            <h4>{{ region.region }}</h4>
+          </header>
+          <ul class="store-list">
+            @for (brand of region.brands; track brand.brand) {
+              @if (brand.drawn; as store) {
+                <li
+                  class="store"
+                  [class.is-hover]="hoveredId() === store.id"
+                  [class.is-dim]="!visibleBrands().has(brand.brand)"
+                  [style.--b]="brand.color"
+                  (mouseenter)="hoverChange.emit(store.id)"
+                  (mouseleave)="hoverChange.emit(null)"
+                  (click)="focusItem.emit(store)">
+                  <span class="badge">{{ brand.letter }}</span>
+                  <span class="store-main">
+                    <span class="store-title">{{ brand.brand }} <span class="muted">· {{ brand.candidates.length }} éligible{{ brand.candidates.length > 1 ? 's' : '' }}</span></span>
+                    <span class="store-addr"><span class="star">★</span> {{ store.address }}, {{ store.city }}</span>
+                  </span>
+                </li>
+              }
+            }
+          </ul>
+        </article>
+      }
+    </section>
+  }
+
+  @case (4) {
+    <section class="panel">
+      <span class="eyebrow">Étape 4</span>
+      <h2>Sélection finale</h2>
+      <p class="lead">Les {{ summary.retained }} drives retenus : un par enseigne et par région.</p>
+      <div class="kpis kpis--3">
+        <div class="kpi kpi--accent"><b>{{ summary.retained }}</b><span>drives retenus</span></div>
+        <div class="kpi"><b>{{ summary.retainedSame }}</b><span>conformes au tirage</span></div>
+        <div class="kpi kpi--outline"><b>{{ summary.retained - summary.retainedSame }}</b><span>remplacés</span></div>
+      </div>
+
+      @for (region of storesByRegion(); track region.region) {
+        <article class="card" [style.--c]="region.color">
+          <header class="card-head" (click)="focusRegion.emit(region.region)">
+            <span class="dot"></span>
+            <h4>{{ region.region }}</h4>
+          </header>
+          <ul class="store-list">
+            @for (brand of region.brands; track brand.brand) {
+              @if (brand.retained; as store) {
+                <li
+                  class="store store--final"
+                  [class.is-hover]="hoveredId() === store.id"
+                  [class.is-dim]="!visibleBrands().has(brand.brand)"
+                  [style.--b]="brand.color"
+                  (mouseenter)="hoverChange.emit(store.id)"
+                  (mouseleave)="hoverChange.emit(null)"
+                  (click)="focusItem.emit(store)">
+                  <span class="badge">{{ brand.letter }}</span>
+                  <span class="store-main">
+                    <span class="store-title">{{ store.type }}</span>
+                    <span class="store-addr">{{ store.address }}, <b>{{ store.city }}</b></span>
+                    @if (store.drawn) {
+                      <span class="pill pill--ok">✓ Conforme au tirage</span>
+                    } @else if (brand.drawn) {
+                      <span class="pill pill--warn" [title]="'Magasin tiré : ' + brand.drawn.address + ', ' + brand.drawn.city">↺ Remplace : {{ brand.drawn.address }} ({{ brand.drawn.city }})</span>
+                    }
+                  </span>
+                </li>
+              }
+            }
+          </ul>
+        </article>
+      }
+    </section>
+  }
+}
